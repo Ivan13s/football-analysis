@@ -2,3 +2,4 @@
 yolov8m.pt
 yolov8x.pt
 /runs
+.env

@@ -7,5 +7,12 @@ results = model.predict('input_videos/test_video.mp4',save = True)  # Inference 
 print(results[0])  
 print("====================================")
 
-for box in results[0].boxes:
-    print(box)
+_ = [r for r in results]
+
+
+
+
+
+# for box in results[0].boxes:
+#     # person_boxes = r.boxes[r.boxes.cls == model.names.index('person')]
+#     print(box)
