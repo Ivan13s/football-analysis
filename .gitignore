@@ -3,3 +3,6 @@ yolov8m.pt
 yolov8x.pt
 /runs
 .env
+/models/best.pt
+/models/last.pt
+/training/yolov5xu.pt

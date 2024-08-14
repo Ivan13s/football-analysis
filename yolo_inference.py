@@ -1,6 +1,6 @@
 from ultralytics import YOLO
 
-model = YOLO('yolov8m')  # Load model
+model = YOLO('models/best.pt')  # Load model
 
 results = model.predict('input_videos/test_video.mp4',save = True)  # Inference on video
 
