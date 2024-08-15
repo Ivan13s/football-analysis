@@ -5,7 +5,7 @@ import os
 import sys
 import cv2
 sys.path.append('../')
-from utils import get_center_of_bounding_box,get_bounding_box_width
+from utils import get_center_of_bounding_box, get_bounding_box_width
 
 class Tracker:
     
