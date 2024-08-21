@@ -137,11 +137,11 @@ class Tracker:
         return frame
     
     def draw_triangle(self,frame,bounding_box,color):
-        y=int(bounding_box[1])
-        x,_=get_center_of_bounding_box(bounding_box)
-        triangle_points=np.array([
-            [x,y]
-            [x-10,y-20]
+        y = int(bounding_box[1])
+        x,_ = get_center_of_bounding_box(bounding_box)
+        triangle_points = np.array([
+            [x,y],
+            [x-10,y-20],
             [x+10,y-20]
         ])
         cv2.drawContours(frame,[triangle_points],0,color,cv2.FILLED)
@@ -159,15 +159,16 @@ class Tracker:
             referee_dict=tracks["referees"][frame_num]
             # Draw Players
             for track_id,player in player_dict.items():
-                frame=self.draw_ellipse(frame, player["bounding_box"],(0,0,255),track_id)
+                color = player.get("team_color", (0,0,255))
+                frame=self.draw_ellipse(frame, player["bounding_box"], color, track_id)
             
-            #Draw Referee
+            # Draw Referee
             for track_id,referee in referee_dict.items():
-                frame=self.draw_ellipse(frame, player["bounding_box"],(0,255,255),track_id)
+                frame=self.draw_ellipse(frame, referee["bounding_box"],(0,255,255),track_id)
 
             # Draw ball
             for track_id,ball in ball_dict.items():
-                frame=self.draw_triangle(frame,ball["bounding_box"],(0.2550))
+                frame=self.draw_triangle(frame,ball["bounding_box"],(0,255,0))
                 
             output_video_frames.append(frame)
         return output_video_frames
