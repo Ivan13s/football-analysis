@@ -4,6 +4,8 @@ import cv2 as cv
 from team_assigner import TeamAssigner
 from player_ball_assigner import PlayerBallAssigner
 import numpy as np
+
+from utils.bounding_box_utils import measure_distance
 def main(): 
     # Read video
     video_frames=read_video('input_videos/test_video.mp4')
@@ -33,7 +35,7 @@ def main():
     # Assign players teams
     team_assigner = TeamAssigner()
     team_assigner.assign_team_color(video_frames[0], tracks['players'][0])
-    
+     
     for frame_num, player_track in enumerate(tracks['players']):
         for player_id, track in player_track.items():
             # bounding_box = track['bounding_box']
@@ -43,24 +45,61 @@ def main():
             
     # Assign Ball Acquisition
     player_assigner = PlayerBallAssigner()
-    team_ball_control=[]
+    team_ball_control = []
 
     for frame_num, player_track in enumerate(tracks['players']):
         ball_bounding_box = tracks['ball'][frame_num][1]['bounding_box']
         assigned_player = player_assigner.assign_ball_to_player(player_track, ball_bounding_box)
+        ball_position = (int((ball_bounding_box[0] + ball_bounding_box[2]) // 2), int((ball_bounding_box[1] + ball_bounding_box[3]) // 2))
 
-        if assigned_player != -1:
-            tracks['players'][frame_num][assigned_player]['has_ball']=True
-            team_ball_control.append(track['player'][frame_num][assigned_player]['team'])
+        # debugging//
+        
+        if(assigned_player!=-1):
+            player_bounding_box = player_track[assigned_player]['bounding_box']
+            player_left_foot_bounding_box = [player_bounding_box[0], player_bounding_box[-1], player_bounding_box[0], player_bounding_box[-1]]
+            player_right_foot_bounding_box = [player_bounding_box[2], player_bounding_box[-1], player_bounding_box[2], player_bounding_box[-1]]
+            # Draw triangles for left and right foot
+            # video_frames[frame_num] = tracker.draw_triangle(video_frames[frame_num], player_left_foot_bounding_box, (255, 165, 0)) #blue
+            # video_frames[frame_num] = tracker.draw_triangle(video_frames[frame_num], player_right_foot_bounding_box, (200, 174, 204)) #purple
+            
+            
+            player_left_foot_position = (int(player_bounding_box[0]), int(player_bounding_box[3]))
+            player_right_foot_position = (int(player_bounding_box[2]), int(player_bounding_box[3]))
+            # Draw lines from feet to ball
+            cv.line(video_frames[frame_num], player_left_foot_position, ball_position, (255, 165, 0), 2)
+            cv.line(video_frames[frame_num], player_right_foot_position, ball_position, (200, 174, 204), 2)
+            
+            with open('output_videos/player_distance_to_ball.txt', 'a') as f:
+                f.write(f"Frame # {frame_num} ~ Player {assigned_player}: left foot distance to ball: {measure_distance(player_left_foot_position, ball_position)}\n")
+                f.write(f"Frame # {frame_num} ~ Player {assigned_player}: right foot distance to ball: {measure_distance(player_right_foot_position, ball_position)}\n")
+            # close file
         else:
-            team_ball_control.append(team_ball_control[-1])
+            with open('output_videos/player_distance_to_ball.txt', 'a') as f:
+                f.write(f"Frame # {frame_num} ~ Ball not assigned to any player\n")
+            
+            
+
+            
+        
+        # //debugging
+        
+                
+        if assigned_player != -1:
+            tracks['players'][frame_num][assigned_player]['has_ball'] = True
+            team_ball_control.append(tracks['players'][frame_num][assigned_player]['team_id'])
+        else:
+            if team_ball_control:  # If the list is not empty
+                team_ball_control.append(team_ball_control[-1])
+            else:  # If the list is empty
+                team_ball_control.append(0)  # or any default value you prefer
             
     team_ball_control = np.array(team_ball_control)
-
+    
+    print(team_ball_control)
+    
     # Draw output
     ## Draw object Tracks
     output_video_frames=tracker.draw_annotations(video_frames,tracks,team_ball_control)
-
     save_video(output_video_frames, 'output_videos/output_video.avi')
 
 if __name__ == '__main__':
