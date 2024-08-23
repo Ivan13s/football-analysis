@@ -5,7 +5,7 @@ from team_assigner import TeamAssigner
 from player_ball_assigner import PlayerBallAssigner
 import numpy as np
 
-from utils.bounding_box_utils import measure_distance
+from utils.bounding_box_utils import get_center_of_bounding_box, measure_distance
 def main(): 
     # Read video
     video_frames=read_video('input_videos/test_video.mp4')
@@ -14,10 +14,7 @@ def main():
     tracker = Tracker('models/best.pt')
     tracks = tracker.get_object_tracks(video_frames, read_from_stub=True, stub_path='stubs/track_stubs.pkl')
     
-    # # Save video
-    # save_video(video_frames,'output_videos/output_video.avi')
-    
-    # # Save cropped image of players
+    ## Save cropped image of players
     # for track_id, player in tracks['players'][0].items():
     #     bounding_box = player['bounding_box']
     #     frame = video_frames[0]
@@ -29,7 +26,6 @@ def main():
     
     
     # Interpolate Ball Positions
-
     tracks["ball"]=tracker.interpolate_ball_positions(tracks["ball"])
     
     # Assign players teams
@@ -50,37 +46,19 @@ def main():
     for frame_num, player_track in enumerate(tracks['players']):
         ball_bounding_box = tracks['ball'][frame_num][1]['bounding_box']
         assigned_player = player_assigner.assign_ball_to_player(player_track, ball_bounding_box)
-        ball_position = (int((ball_bounding_box[0] + ball_bounding_box[2]) // 2), int((ball_bounding_box[1] + ball_bounding_box[3]) // 2))
-
+        ball_position = get_center_of_bounding_box(ball_bounding_box)
+        
         # debugging//
         
         if(assigned_player!=-1):
             player_bounding_box = player_track[assigned_player]['bounding_box']
-            player_left_foot_bounding_box = [player_bounding_box[0], player_bounding_box[-1], player_bounding_box[0], player_bounding_box[-1]]
-            player_right_foot_bounding_box = [player_bounding_box[2], player_bounding_box[-1], player_bounding_box[2], player_bounding_box[-1]]
-            # Draw triangles for left and right foot
-            # video_frames[frame_num] = tracker.draw_triangle(video_frames[frame_num], player_left_foot_bounding_box, (255, 165, 0)) #blue
-            # video_frames[frame_num] = tracker.draw_triangle(video_frames[frame_num], player_right_foot_bounding_box, (200, 174, 204)) #purple
-            
             
             player_left_foot_position = (int(player_bounding_box[0]), int(player_bounding_box[3]))
             player_right_foot_position = (int(player_bounding_box[2]), int(player_bounding_box[3]))
             # Draw lines from feet to ball
             cv.line(video_frames[frame_num], player_left_foot_position, ball_position, (255, 165, 0), 2)
             cv.line(video_frames[frame_num], player_right_foot_position, ball_position, (200, 174, 204), 2)
-            
-            with open('output_videos/player_distance_to_ball.txt', 'a') as f:
-                f.write(f"Frame # {frame_num} ~ Player {assigned_player}: left foot distance to ball: {measure_distance(player_left_foot_position, ball_position)}\n")
-                f.write(f"Frame # {frame_num} ~ Player {assigned_player}: right foot distance to ball: {measure_distance(player_right_foot_position, ball_position)}\n")
-            # close file
-        else:
-            with open('output_videos/player_distance_to_ball.txt', 'a') as f:
-                f.write(f"Frame # {frame_num} ~ Ball not assigned to any player\n")
-            
-            
 
-            
-        
         # //debugging
         
                 
@@ -91,7 +69,7 @@ def main():
             if team_ball_control:  # If the list is not empty
                 team_ball_control.append(team_ball_control[-1])
             else:  # If the list is empty
-                team_ball_control.append(0)  # or any default value you prefer
+                team_ball_control.append(0)  # default value for when the ball is not assigned to any player at the beginning of the video
             
     team_ball_control = np.array(team_ball_control)
     
