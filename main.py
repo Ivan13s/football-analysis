@@ -4,15 +4,25 @@ import cv2 as cv
 from team_assigner import TeamAssigner
 from player_ball_assigner import PlayerBallAssigner
 import numpy as np
+from camera_movement_estimator import CameraMovementEstimator
 
 from utils.bounding_box_utils import get_center_of_bounding_box, measure_distance
 def main(): 
     # Read video
     video_frames=read_video('input_videos/test_video.mp4')
     
-    
+    # Tracker initialization
     tracker = Tracker('models/best.pt')
     tracks = tracker.get_object_tracks(video_frames, read_from_stub=True, stub_path='stubs/track_stubs.pkl')
+    
+    # Get object positions
+    tracker.add_position_to_tracks(tracks)
+    
+    # Camera movement estimation
+    camera_movement_estimator = CameraMovementEstimator(video_frames[0])
+    camera_movement_per_frame = camera_movement_estimator.get_camera_movement(video_frames, read_from_stub=True, stub_path='stubs/camera_movement_stubs.pkl')
+    
+    camera_movement_estimator.add_adjust_positions_to_tracks(tracks, camera_movement_per_frame)
     
     ## Save cropped image of players
     # for track_id, player in tracks['players'][0].items():
@@ -77,9 +87,14 @@ def main():
     
     # Draw output
     ## Draw object Tracks
-    output_video_frames=tracker.draw_annotations(video_frames,tracks,team_ball_control)
-    save_video(output_video_frames, 'output_videos/output_video.avi')
+    output_video_frames = tracker.draw_annotations(video_frames,tracks,team_ball_control)
 
+    ## Draw Camera Movement
+    output_video_frames = camera_movement_estimator.draw_camera_movement(output_video_frames, camera_movement_per_frame)
+    
+    #Save video
+    save_video(output_video_frames,'output_videos/output_video.avi')
+    
 if __name__ == '__main__':
     main()
 
