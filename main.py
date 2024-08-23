@@ -7,6 +7,7 @@ import numpy as np
 from camera_movement_estimator import CameraMovementEstimator
 
 from utils.bounding_box_utils import get_center_of_bounding_box, measure_distance
+from view_transformer import ViewTransformer
 def main(): 
     # Read video
     video_frames=read_video('input_videos/test_video.mp4')
@@ -23,6 +24,10 @@ def main():
     camera_movement_per_frame = camera_movement_estimator.get_camera_movement(video_frames, read_from_stub=True, stub_path='stubs/camera_movement_stubs.pkl')
     
     camera_movement_estimator.add_adjust_positions_to_tracks(tracks, camera_movement_per_frame)
+
+    #View Transformer
+    view_transformer=ViewTransformer()
+    view_transformer.add_transformed_position_to_tracks(tracks)
     
     ## Save cropped image of players
     # for track_id, player in tracks['players'][0].items():
