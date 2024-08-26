@@ -1,6 +1,8 @@
-# Introduction
+# Football Player Tracking and Analysis
 ![Football Analysis](preview.png)
 
+
+## Introduction
 This project is designed to track football players and analyze their movements in order to create diverse statistics such as team ball possession, distance covered, speed etc. In order to do so we're making use of the state of the art convolotional neural network YOLO to create the model, Roboflow for the dataset, SuperVision OpenCV for image processing, numpy, pandas and others.
 
 ## Dependencies
