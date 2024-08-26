@@ -1,0 +1,8 @@
+opencv-python-headless
+numpy
+torch
+ultralytics==8.2.45
+python-dotenv
+roboflow
+pandas
+supervision
